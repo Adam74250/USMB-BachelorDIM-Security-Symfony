@@ -5,6 +5,8 @@ namespace AppBundle\Controller;
 use AppBundle\Entity\Show;
 use AppBundle\File\FileUploader;
 use AppBundle\Type\ShowType;
+use AppBundle\ShowFinder\ShowFinder;
+use AppBundle\ShowFinder\ShowFinderInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -20,8 +22,16 @@ class ShowController extends Controller
     /**
      * @Route("/", name="list")
      */
-    public function listAction(Request $request)
+    public function listAction(Request $request, ShowFinder $showFinder)
     {
+      if($request->getSession()->has('query_search_shows')) {
+        $showFinder->searchByName($session->get('query_search_shows'));
+      } else {
+        $shows = $showRepository->findAll();
+      }
+
+
+      /*
         $showRepository = $this->getDoctrine()->getRepository('AppBundle:Show');
         $session = $request->getSession();
 
@@ -32,7 +42,7 @@ class ShowController extends Controller
             $request->getSession()->remove('query_search_shows');
         } else {
             $shows = $showRepository->findAll();
-        }
+        } */
 
         return $this->render('show/list.html.twig', ['shows' => $shows]);
     }
