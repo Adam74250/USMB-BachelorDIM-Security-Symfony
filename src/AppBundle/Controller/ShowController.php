@@ -9,6 +9,8 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 
 /**
  * @Route(name="show_")
@@ -112,5 +114,30 @@ class ShowController extends Controller
         $request->getSession()->set('query_search_shows', $request->request->get('query'));
 
         return $this->redirectToRoute('show_list');
+    }
+
+    /**
+     * @Route("/delete", name="delete")
+     * @Method({"DELETE"})
+     */
+    public function deleteAction(Request $request, CsrfTokenManagerInterface $csrfTM) {
+      $doctrine = $this->getDoctrine();
+      $showId = $request->request->get('show_id');
+
+      if(!$show = $doctrine->getRepository('AppBundle:Show')->findOneById($showId)) {
+        throw new NotFoundHttpException(sprintf('No show with id found'));
+      }
+
+      $csrfToken = new CsrfToken('delete-show', $request->request->get('_csrf_token'));
+
+      if($csrfTM->isTokenValid($csrfToken)) {
+        $doctrine->getManager()->remove($show);
+        $doctirne->getManager()->flush();
+      }
+
+      $this->addFlash('success', 'Successfull deleted');
+
+      return $this->redirectToRoute('show_list');
+
     }
 }
